@@ -1,0 +1,42 @@
+﻿@using BlazorServerAuthenticationAndAuthorization.Authentication
+@inherits LayoutComponentBase
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+<PageTitle>BlazorServerAuthenticationAndAuthorization</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            
+            <AuthorizeView>
+                <Authorized>
+                    <a>Привет, @context.User.Identity.Name!</a>
+                    <a @onclick="Logout" href="javascript:void(0)">Выход</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a>Привет, гость!</a>
+                    <a href="/login">Войти</a>
+                    <a href="/register">Зарегистрироваться</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code{
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        navManager.NavigateTo("/", true);
+    }
+}
