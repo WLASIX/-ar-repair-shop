@@ -1,0 +1,77 @@
+@page "/prices"
+@using Data
+@inject DB db
+
+<link href="css/table.css" rel="stylesheet">
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Материал</th>
+            <th>Стоимость материала</th>
+        </tr>
+    </thead>
+
+    @{
+        GetFromDB("материалы").Wait();
+    }
+
+    @if (items != null)
+    {
+        foreach (DBItems i in items)
+        {
+            <tbody>
+                <tr>
+                    <td>@i.MaterialName</td>
+                    <td>@i.MaterialCost</td>
+                </tr>
+            </tbody>
+        }
+    }
+</table>
+
+<br />
+<br />
+<br />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Услуга</th>
+            <th>Стоимость</th>
+            <th>Гарантия</th>
+        </tr>
+    </thead>
+
+    @{
+        GetFromDB("услуги").Wait();
+    }
+
+    @if (items != null)
+    {
+        foreach (DBItems i in items)
+        {
+            <tbody>
+                <tr>
+                    <td>@i.OrderName</td>
+                    <td>@i.OrderPrice</td>
+                    <td>@i.Guarantee</td>
+                </tr>
+            </tbody>
+        }
+    }
+</table>
+
+@code{
+    List<DBItems> items;
+    string? value;
+
+    // получение всех пользователей с БД
+    private async Task GetFromDB(string table)
+    {
+        if (table == "материалы")
+            items = await db.GetMaterialsFromDB();
+        if (table == "услуги")
+            items = await db.GetOrderListFromDB();
+    }
+}

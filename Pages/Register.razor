@@ -1,0 +1,95 @@
+@page "/register"
+@using BlazorServerAuthenticationAndAuthorization.Authentication
+@using BlazorServerAuthenticationAndAuthorization.Pages
+@using Data
+@inject UserAccountService userAccountService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+@inject DB db
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <div class="mb-3 text-center">
+            <h3>Регистрация</h3>
+        </div>
+        <div class="mb-3">
+            <label>Имя пользователя</label>
+            <input @bind="model.UserName" class="form-control" placeholder="Введите логин" />
+        </div>
+        <div class="mb-3">
+            <label>Пароль</label>
+            <input @bind="model.Password" type="password" class="form-control" placeholder="Введите пароль" />
+        </div>
+        <div class="mb-3">
+            <label>ФИО</label>
+            <input @bind="model.FullName" type="form-control" class="form-control" placeholder="Введите ФИО" />
+        </div>
+        <div class="mb-3">
+            <label>Номер машины</label>
+            <input @bind="model.CarStateNumber" type="form-control" class="form-control" placeholder="Введите номер машины" />
+        </div>
+        <div class="mb-3">
+            <label>Марка машины</label>
+            <input @bind="model.CarBrand" type="form-control" class="form-control" placeholder="Введите марку машины" />
+        </div>
+        <div class="mb-3">
+            <label>Номер телефона</label>
+            <input @bind="model.PhoneNumber" type="form-control" class="form-control" placeholder="Введите номер телефона" />
+        </div>
+        <div class="mb-3 d-grid gap-2">
+            <button @onclick="Registration" class="btn btn-myPrimary">Зарегистрироваться</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    public class Model
+    {
+        public string? UserName { get; set; }
+        public string? Password { get; set; }
+        public string? FullName { get; set; }
+        public string? CarStateNumber { get; set; }
+        public string? CarBrand { get; set; }
+        public string? PhoneNumber { get; set; }
+
+    }
+
+    private Model model = new Model();
+
+    private async Task Registration()
+    {
+        var checkUserAccount = userAccountService.GetByUserName(model.UserName);
+        UserAccount newUserAccount;
+
+        if (checkUserAccount == null)
+        {
+            userAccountService.SetClientAsync(model).Wait();
+            newUserAccount = userAccountService.GetByUserName(model.UserName);
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+            await customAuthStateProvider.UpdateAuthenticationState(new UserSession
+                {
+                    UserName = newUserAccount?.UserName,
+                    Role = newUserAccount?.Role
+                });
+            await js.InvokeVoidAsync("alert", "Аккаунт успешно создан!");
+            navManager.NavigateTo("/", true);
+            return;
+        }
+        else
+        {
+            if (checkUserAccount.UserName == model.UserName)
+            {
+                await js.InvokeVoidAsync("alert", "Аккаунт уже существует. Если вы забыли пароль, то свяжитесь с администратором сайта");
+                return;
+            }
+
+            if (model.UserName == null || model.Password == null)
+            {
+                await js.InvokeVoidAsync("alert", "Заполните поля!");
+                return;
+            }
+        }
+    }
+}
+

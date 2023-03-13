@@ -1,0 +1,69 @@
+﻿@page "/login"
+@using BlazorServerAuthenticationAndAuthorization.Authentication
+@inject UserAccountService userAccountService
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+<div class="row">
+    <div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+        <div class="mb-3 text-center">
+            <h3>Войдите в систему</h3>
+        </div>
+        <div class="mb-3">
+            <label>Имя пользователя</label>
+            <input @bind="model.UserName" class="form-control" placeholder="Введите логин" />
+        </div>
+        <div class="mb-3">
+            <label>Пароль</label>
+            <input @bind="model.Password" type="password" class="form-control" placeholder="Введите пароль" />
+        </div>
+        <div class="mb-3 d-grid gap-2">
+            <button @onclick="Authenticate" class="btn btn-myPrimary">Войти</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private class Model
+    {
+        public string? UserName { get; set; }
+        public string? Password { get; set; }
+        public string UserId { get; set; }
+    }
+
+    private Model model = new Model();
+
+    public async Task Authenticate()
+    {
+        var userAccount = userAccountService.GetByUserName(model.UserName);
+        if (userAccount == null || userAccount.Password != model.Password)
+        {
+            await js.InvokeVoidAsync("alert", "Неверный логин или пароль");
+            return;
+        }
+
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(new UserSession
+            {
+                UserName = userAccount.UserName,
+                Role = userAccount.Role,
+                UserId = userAccount.UserId,
+            });
+
+        navManager.NavigateTo("/", true);
+    }
+
+    public async Task AuthenticateAfterRegistration(string userName, string password)
+    {
+        var userAccount = userAccountService.GetByUserName(model.UserName);
+
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(new UserSession
+            {
+                UserName = userAccount.UserName,
+                Role = userAccount.Role
+            });
+        navManager.NavigateTo("/", true);
+    }
+}

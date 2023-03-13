@@ -1,0 +1,210 @@
+﻿@page "/booking"
+@using Data
+@using System.Security.Claims
+@inject DB db
+@inject IJSRuntime js
+
+<link href="css/booking.css" rel="stylesheet">
+
+<AuthorizeView>
+    <Authorized>
+        <br />
+        <div class="myButtonGroup">
+            <button class="btn btn-myPrimary" value="order list" @onclick="@(() => GetFromDB("order list").Wait())">Заказать услугу</button>
+            <button class="btn btn-myPrimary" value="material" @onclick="@(() => GetFromDB("material").Wait())">Заказать материал</button>
+        </div>
+        <br />
+
+
+
+        @if (items != null)
+        {
+            if (value == "order list")
+            {
+            <section class="bg-light">
+                <div class="container py-5">
+                    <div class="row text-center py-3">
+                        <div class="col-lg-6 m-auto">
+                            <h1 class="h1">Выберите услугу</h1>
+                        </div>
+                    </div>
+                    @* Добавить новое значение case, если админ создаст новую услугу*@
+                    @* Если админу лень, то для удобства можно доработать программу - добавить в БД новое поле с url адресом, которое ведёт на картинку услуги*@
+                    <div class="row">
+                        @{
+                            GetFromDB("order list").Wait();
+                        }
+                        @if (items != null)
+                        {
+                            @foreach (DBItems i in items)
+                            {
+                                string? text = i.OrderName, source = "test";
+                                int price = i.OrderPrice;
+
+                                switch (i.Id)
+                                {
+                                    case 1:
+                                        source = "tonirovka.jpg";
+                                        break;
+                                    case 2:
+                                        source = "avtozvuk.jpg";
+                                        break;
+                                    case 3:
+                                        source = "signalizacia.jpg";
+                                        break;
+                                    case 4:
+                                        source = "kompdiagnostika.jpg";
+                                        break;
+                                    case 5:
+                                        source = "zamena masla.jpg";
+                                        break;
+                                    case 6:
+                                        source = "zamenagrm.png";
+                                        break;
+                                    case 7:
+                                        source = "zamenapodveski.jpg";
+                                        break;
+                                    case 8:
+                                        source = "zamenasvechej.jpg";
+                                        break;
+                                    case 9:
+                                        source = "zamenaprokladkipoddona.jpg";
+                                        break;
+                                    case 10:
+                                        source = "remontmkpp.png";
+                                        break;
+                                    case 11:
+                                        source = "remontakpp.jpg";
+                                        break;
+                                    case 12:
+                                        source = "zamenatrosascepleniya.jpg";
+                                        break;
+                                }
+
+                                <div class="col-12 col-md-4 mb-4">
+                                    <div style="background-color: #fff" class="card h-100 border-dark mb-3">
+                         
+                                        <ul class="list-unstyled d-flex justify-content-between">
+                                                <button class="btn btn-myPrimary" value="material" @onclick="@(() => SetOrder("order list", i, Convert.ToInt32(context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value)).Wait())">Заказать товар</button>
+                                            <li class="text-dark text-right">@price ₽</li>
+                                        </ul>
+                                        <div class="card-body">
+                                            <a class="h2 text-decoration-none text-dark">@text</a>
+                                        </div>
+                                        <a>
+                                            <img src="img/@source" class="card-img-top" alt="...">
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </section>
+            }
+            if (value == "material")
+            {
+                <section class="bg-light">
+                    <div class="container py-5">
+                        <div class="row text-center py-3">
+                            <div class="col-lg-6 m-auto">
+                                <h1 class="h1">Выберите материал</h1>
+                            </div>
+                        </div>
+                        <div class="row">
+                            @{
+                                GetFromDB("material").Wait();
+                            }
+                            @if (items != null)
+                            {
+                                @foreach (DBItems i in items)
+                                {
+                                    string? text = i.MaterialName;
+                                    string? price = i.MaterialCost;
+                                    <div class="col-12 col-md-4 mb-4">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <ul class="list-unstyled d-flex justify-content-between">
+                                                    <li class="text-muted text-right">@price ₽</li>
+                                                </ul>
+                                                <a class="h2 text-decoration-none text-dark">@text</a>
+                                                <div class="forButton">
+                                                    <button style="margin: 0 auto; display: block;" class="btn btn-myPrimary" value="material" @onclick="@(() => SetOrder("material", i, Convert.ToInt32(context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value)).Wait())">Заказать товар</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </section>
+            }
+        }
+    </Authorized>
+
+    <NotAuthorized>
+        <section class="bg-light">
+            <div class="container py-5">
+                <div class="row text-center pt-3">
+                    <div class="col-lg-6 m-auto">
+                        <h1 class="h1">Страница не найдена</h1>
+                        <p>Для просмотра этой страницы <a href="login">войдите</a> в аккаунт, либо <a href="register">зарегистрируйтесь</a></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string? name;
+    private DateTime? date;
+    private bool checkMaintenance;
+    private bool checkDiagnostics;
+    private bool checkAutoRepair;
+    private List<string> serviceType = new List<String>();
+
+    private string GetDate()
+    {
+        DateTime date = DateTime.Now;
+        return date.ToString("dd.MM.yyyy");
+    }
+
+    List<DBItems> items;
+    string? value;
+
+    // получение списка услуг БД
+    private async Task GetFromDB(string table)
+    {
+        value = table;
+
+        if (items != null)
+            items.Clear();
+
+        if (table == "order list")
+        {
+            items = await db.GetOrderListFromDB();
+        }
+
+        if (table == "material")
+        {
+            items = await db.GetMaterialsFromDB();
+        }
+
+    }
+
+    private async Task SetOrder(string table, DBItems item, int clientId)
+    {
+        if (table == "order list")
+        {
+            await db.SetOrderForServices(item, GetDate(), clientId);
+        }
+
+        if (table == "material")
+        {
+            await db.SetOrderForMaterials(item, GetDate(), clientId);
+        }
+        await js.InvokeVoidAsync("alert", "Заказ успешно оформлен!");
+    }
+}

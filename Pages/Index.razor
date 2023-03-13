@@ -1,0 +1,178 @@
+﻿@page "/"
+@using Data
+@inject DB db
+
+<PageTitle>Главная страница</PageTitle>
+
+@*
+<AuthorizeView>
+    <Authorized>
+        <h1>Привет, @context.User.Identity.Name!</h1>
+    </Authorized>
+    <NotAuthorized>
+        <h1>Привет, гость!</h1>
+        Для просмотра всего сайта войдите в систему, либо зарегистрируйтесь.
+    </NotAuthorized>
+</AuthorizeView>
+
+<h1 style="text-align: center;">Диагностика, ремонт, и техническое обслуживание автомобилей</h1>
+<div style="text-align: center;">
+    <form action="booking">
+        <button>Оставить заявку</button>
+    </form>
+</div>
+*@
+
+<head>
+    <title>Zay Shop eCommerce HTML CSS Template</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" href="img/apple-icon.png">
+    <link rel="shortcut icon" type="img/x-icon" href="img/favicon.ico">
+
+    <link rel="stylesheet" href="css/bootstrapcss">
+    <link rel="stylesheet" href="css/templatemo.css">
+    <link rel="stylesheet" href="css/custom.css">
+
+    <!-- Load fonts style after rendering the layout styles -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="css/fontawesome.min.css">
+</head>
+
+<body>
+    <!-- Популярные услуги за последний месяц -->
+    <section class="bg-light">
+        <div class="container py-5">
+            <div class="row text-center pt-3">
+                <div class="col-lg-6 m-auto">
+                    <h1 class="h1">Популярные услуги</h1>
+                    <p>За последний месяц</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-4 p-5 mt-3">
+                    <a href="#"><img src="img/avtozvuk.jpg" class="rounded-1 img-fluid border"></a>
+                    <h5 class="text-center mt-3 mb-3">Установка акустической системы</h5>
+                </div>
+                <div class="col-12 col-md-4 p-5 mt-3">
+                    <a href="#"><img src="img/zamena masla.jpg" class="rounded-1 img-fluid border"></a>
+                    <h2 class="h5 text-center mt-3 mb-3">Замена масла в двигателе</h2>
+                    <p class="text-center">
+                        <NavLink href="booking">
+                            <button class="btn btn-myPrimary">Оформить заказ</button>
+                        </NavLink>
+                    </p>
+                </div>
+                <div class="col-12 col-md-4 p-5 mt-3">
+                    <a href="#"><img src="img/3.jpg" class="rounded-1 img-fluid border" img-fluid border"></a>
+                    <h2 class="h5 text-center mt-3 mb-3">Оформление заказа по доставке запчастей</h2>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <br />
+
+    <!-- Все услуги -->
+    <section class="bg-light">
+        <div class="container py-5">
+            <div class="row text-center py-3">
+                <div class="col-lg-6 m-auto">
+                    <h1 class="h1">Все услуги</h1>
+                </div>
+            </div>
+            @* Добавить новое значение case, если админ создаст новую услугу*@
+            @* Если админу лень, то для удобства можно доработать программу - добавить в БД новое поле с url адресом, которое ведёт на картинку услуги*@
+            <div class="row">
+                @{
+                    GetFromDB("order list").Wait();
+                }
+                @if (items != null)
+                {
+                    @foreach (DBItems i in items)
+                    {
+                        string text = i.OrderName, source = "test";
+                        int price = i.OrderPrice;
+
+                        switch (i.Id)
+                        {
+                            case 1:
+                                source = "tonirovka.jpg";
+                                break;
+                            case 2:
+                                source = "avtozvuk.jpg";
+                                break;
+                            case 3:
+                                source = "signalizacia.jpg";
+                                break;
+                            case 4:
+                                source = "kompdiagnostika.jpg";
+                                break;
+                            case 5:
+                                source = "zamena masla.jpg";
+                                break;
+                            case 6:
+                                source = "zamenagrm.png";
+                                break;
+                            case 7:
+                                source = "zamenapodveski.jpg";
+                                break;
+                            case 8:
+                                source = "zamenasvechej.jpg";
+                                break;
+                            case 9:
+                                source = "zamenaprokladkipoddona.jpg";
+                                break;
+                            case 10:
+                                source = "remontmkpp.png";
+                                break;
+                            case 11:
+                                source = "remontakpp.jpg";
+                                break;
+                            case 12:
+                                source = "zamenatrosascepleniya.jpg";
+                                break;
+                        }
+
+                        <div class="col-12 col-md-4 mb-4">
+                            <div class="card h-100">
+                                <a>
+                                    <img src="img/@source" class="card-img-top" alt="...">
+                                </a>
+                                <div class="card-body">
+                                    <ul class="list-unstyled d-flex justify-content-between">
+                                        <li class="text-muted text-right">@price ₽</li>
+                                    </ul>
+                                    <a class="h2 text-decoration-none text-dark">@text</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </section>
+</body>
+
+@code {
+    List<DBItems> items;
+    string? value;
+
+    // получение списка услуг БД
+    private async Task GetFromDB(string operation)
+    {
+        value = operation;
+
+        if (items != null)
+            items.Clear();
+
+        if (operation == "order list")
+        {
+            items = await db.GetOrderListFromDB();
+        }
+
+    }
+
+}
+

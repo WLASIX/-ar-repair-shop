@@ -1,0 +1,237 @@
+@page "/adminpanel"
+@using Data
+@inject DB db
+@inject NavigationManager navManager
+
+<link href="css/table.css" rel="stylesheet">
+
+<AuthorizeView Roles="Administrator">
+    <Authorized>               
+    <br />
+    <div class="myButtonGroup">
+        <button class="btn btn-myPrimary" value="client" @onclick="@(() => GetFromDB("client").Wait())">Показать аккаунты</button>
+        <button class="btn btn-myPrimary" value="provided order list" @onclick="@(() => GetFromDB("provided order list").Wait())">Показать заказы</button>
+        <button class="btn btn-myPrimary" value="materials" @onclick="@(() => GetFromDB("materials").Wait())">Показать материалы</button>
+        <button class="btn btn-myPrimary" value="order list" @onclick="@(() => GetFromDB("order list").Wait())">Показать существующие услуги</button>
+    </div>
+    <br />
+    <br />
+
+
+    @*---------------------*@
+    @*Отрисовка таблицы*@
+    @*---------------------*@
+    @if (items != null)
+    {
+        @if (value == "client")
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Логин</th>
+                        <th>Пароль</th>
+                        <th>ФИО</th>
+                        <th>Номер машины</th>
+                        <th>Марка машины</th>
+                        <th>Номер телефона</th>
+                        <th>Права администратора</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                @foreach (DBItems i in items)
+                {
+                    <tbody>
+                        <tr>
+                            <td><input readonly @onchange="@((ChangeEventArgs e) => i.Id = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.Id" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.Login = e.Value?.ToString())" type="text" class="myInputText" value="@i.Login" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.Password = e.Value?.ToString())" type="text" class="myInputText" value="@i.Password" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.FullName = e.Value?.ToString())" type="text" class="myInputText" value="@i.FullName" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.CarStateNumber = e.Value?.ToString())" type="text" class="myInputText" value="@i.CarStateNumber" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.CarBrand = e.Value?.ToString())" type="text" class="myInputText" value="@i.CarBrand" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.PhoneNumber = e.Value?.ToString())" type="text" class="myInputText" value="@i.PhoneNumber" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.IsAdmin = Convert.ToBoolean(e.Value))"type="text" class="myInputText" value="@i.IsAdmin.ToString()" /></td>
+                            <td><button class="btn btn-myPrimaryViolet" @onclick="@(() => ChangeInDB("клиент", i, i.Id).Wait())">Редактировать</button></td>
+                            <td><button class="btn btn-myPrimaryRed" @onclick="@(() => DeleteFromDB("клиент", i.Id).Wait())">Удалить</button></td>
+                        </tr>
+                    </tbody>
+                }
+                    <td><input @bind="_item[0]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[1]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[2]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[3]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[4]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[5]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[6]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[7]" type="text" class="myInputText" /></td>
+                    <td><button class="btn btn-myPrimaryGreen" @onclick="@(() => AddToDB("клиент", _item).Wait())">Добавить</button></td>
+                <br />
+
+            </table>
+        }
+      
+        @if (value == "provided order list")
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>IdКлиента</th>
+                        <th>IdУслуги</th>
+                        <th>Код материала</th>
+                        <th>Дата приёма</th>
+                        <th>Дата выполнения</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+            
+                @foreach (DBItems i in items)
+                {
+                    <tbody>
+                        <tr>
+                            <td><input readonly @onchange="@((ChangeEventArgs e) => i.Id = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.Id" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.IdClient = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.IdClient" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.IdOrder = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.IdOrder" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.IdMaterial = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.IdMaterial" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.DateOfReceipt = e.Value?.ToString())" type="text" class="myInputText" value="@i.DateOfReceipt" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.DateOfCompletion = e.Value?.ToString())" type="text" class="myInputText" value="@i.DateOfCompletion" /></td>
+                            <td><button class="btn btn-myPrimaryViolet" @onclick="@(() => ChangeInDB("клиенты/услуги", i, i.Id).Wait())">Редактировать</button></td>
+                            <td><button class="btn btn-myPrimaryRed" @onclick="@(() => DeleteFromDB("клиенты/услуги", i.Id).Wait())">Удалить</button></td>
+                        </tr>
+                    </tbody>
+                }
+                    <td><input @bind="_item[0]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[1]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[2]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[3]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[4]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[5]"type="text" class="myInputText" /></td>
+                    <td><button class="btn btn-myPrimaryGreen" @onclick="@(() => AddToDB("клиенты/услуги", _item).Wait())">Добавить</button></td>
+                <br />
+            </table>
+        }
+
+        @if (value == "materials")
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Материал</th>
+                        <th>Стоимость материала</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+            
+                @foreach (DBItems i in items)
+                {
+                    <tbody>
+                        <tr>
+                            <td><input readonly @onchange="@((ChangeEventArgs e) => i.Id = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.Id" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.MaterialName = e.Value?.ToString())" type="text" class="myInputText" value="@i.MaterialName" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.MaterialCost = e.Value?.ToString())" type="text" class="myInputText" value="@i.MaterialCost" /></td>
+                            <td><button class="btn btn-myPrimaryViolet" @onclick="@(() => ChangeInDB("материалы", i, i.Id).Wait())">Редактировать</button></td>
+                            <td><button class="btn btn-myPrimaryRed" @onclick="@(() => DeleteFromDB("материалы", i.Id).Wait())">Удалить</button></td>
+                        </tr>
+                    </tbody>
+                }
+                    <td><input @bind="_item[0]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[1]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[2]" type="text" class="myInputText" /></td>
+                    <td><button class="btn btn-myPrimaryGreen" @onclick="@(() => AddToDB("материалы", _item).Wait())">Добавить</button></td>
+                <br />
+            </table>
+        }
+
+        @if (value == "order list")
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Услуга</th>
+                        <th>Стоимость</th>
+                        <th>Гарантия (месяцев)</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+            
+                @foreach (DBItems i in items)
+                {
+                    <tbody>
+                        <tr>
+                            <td><input readonly @onchange="@((ChangeEventArgs e) => i.Id = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.Id" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.MaterialName = e.Value?.ToString())"type="text" class="myInputText" value="@i.OrderName" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.OrderPrice = Convert.ToInt32(e.Value))" type="text" class="myInputText" value="@i.OrderPrice" /></td>
+                            <td><input @onchange="@((ChangeEventArgs e) => i.Guarantee = Convert.ToInt32(e.Value))"type="text" class="myInputText" value="@i.Guarantee" /></td>
+                            <td><button class="btn btn-myPrimaryViolet" @onclick="@(() => ChangeInDB("услуги", i, i.Id).Wait())">Редактировать</button></td>
+                            <td><button class="btn btn-myPrimaryRed" @onclick="@(() => DeleteFromDB("услуги", i.Id).Wait())">Удалить</button></td>
+                        </tr>
+                    </tbody>
+                }
+                    <td><input @bind="_item[0]"type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[1]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[2]" type="text" class="myInputText" /></td>
+                    <td><input @bind="_item[3]" type="text" class="myInputText" /></td>
+                    <td><button class="btn btn-myPrimaryGreen" @onclick="@(() => AddToDB("услуги", _item).Wait())">Добавить</button></td>
+                <br />
+            </table>
+        }
+    }
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    List<DBItems> items;
+    string? value;
+
+    public string[] _item { get; set; } = new string[10];
+    public int oldItemId { get; set; }
+
+    // получение всех пользователей с БД
+    private async Task GetFromDB(string operation)
+    {
+        value = operation;
+
+        if (items != null)
+            items.Clear();
+
+        if (operation == "client")       
+            items = await db.GetClientsFromDB();
+
+        if (operation == "provided order list")       
+            items = await db.GetProvidedOrderListFromDB();
+
+        if (operation == "materials")
+            items = await db.GetMaterialsFromDB();
+
+        if (operation == "order list")
+            items = await db.GetOrderListFromDB();  
+    }
+
+    private async Task DeleteFromDB(string table, int id)
+    {
+        await db.Delete(table, id);
+        navManager.NavigateTo("/adminpanel", true);
+    }
+
+    private async Task AddToDB(string table, string[] items)
+    {
+        await db.Add(table, items);
+        navManager.NavigateTo("/adminpanel", true);
+    }
+
+    private async Task ChangeInDB(string table, DBItems items, int oldItemId)
+    {
+        await db.Change(table, items, oldItemId);
+        navManager.NavigateTo("/adminpanel", true);
+    }
+
+}
